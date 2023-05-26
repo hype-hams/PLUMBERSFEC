@@ -32,3 +32,11 @@ CREATE TABLE IF NOT EXISTS photos (
   FOREIGN KEY (answer_id) REFERENCES answers(id)
 );
 
+COPY questions (product_id, body, date_written, asker_name, asker_email, reported, helpful)
+FROM '/gabrieljimenez/downloads/questions.csv' DELIMITER ',' CSV HEADER;
+
+COPY answers (question_id, body, date_written, answerer_name, answerer_email, reported, helpful)
+FROM '/gabrieljimenez/downloads/answers.csv' DELIMITER ',' CSV HEADER;
+
+COPY photos (answer_id, url)
+FROM '/gabrieljimenez/downloads/answers_photos.csv' DELIMITER ',' CSV HEADER;
