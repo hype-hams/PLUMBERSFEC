@@ -55,8 +55,6 @@ module.exports = {
   },
 
   postQuestion: async (req, res) => {
-    // Will post a new question to the db
-    // req will vary based off how modal looks
     try {
       const currentDate = new Date();
       const convertedDate = currentDate.getTime();
@@ -74,19 +72,6 @@ module.exports = {
       console.log('Error sending data to server: ', error);
       res.sendStatus(500);
     }
-
-    // axios.post(serverAPI, req.body, {
-    //   headers: headAuth,
-    //   params: {
-    //     product_id: req.product_id,
-    //   },
-    // })
-    //   .then((response) => {
-    //     res.status(201).send(response.data);
-    //   })
-    //   .catch((err) => {
-    //     console.error('PROBLEM WITH POSTING QUESTION: ', err);
-    //   });
   },
 
   postAnswer: (req, res) => {
@@ -107,38 +92,42 @@ module.exports = {
       });
   },
 
-  upvoteQuestion: (req, res) => {
-    console.log('upvote body: ', req.body.question_id);
-    axios.put(`${serverAPI}/${req.body.question_id}/helpful`, req.body, {
-      headers: headAuth,
-      params: {
-        question_id: req.body.question_id,
-      },
-    })
-      .then((response) => {
-        res.status(204).send(response.data);
-      })
-      .catch((err) => {
-        console.error('PROBLEM UPVOTING QUESTION:  ', err);
-      });
+  upvoteQuestion: async (req, res) => {
+    try {
+      const questionId = req.body.question_id;
+      await models.questions.updateQuestionHelpfulness(questionId);
+
+      res.sendStatus(204);
+    } catch (error) {
+      console.log('Error updating question helpfulness: ', error);
+      res.sendStatus(500);
+    }
+    // console.log('upvote body: ', req.body.question_id);
+    // axios.put(`${serverAPI}/${req.body.question_id}/helpful`, req.body, {
+    //   headers: headAuth,
+    //   params: {
+    //     question_id: req.body.question_id,
+    //   },
+    // })
+    //   .then((response) => {
+    //     res.status(204).send(response.data);
+    //   })
+    //   .catch((err) => {
+    //     console.error('PROBLEM UPVOTING QUESTION:  ', err);
+    //   });
   },
 
-  reportQuestion: (req, res) => {
-    axios.put(`https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/qa/questions/${req.body.question_id}/report`, req.body, {
-      headers: headAuth,
-      params: {
-        question_id: req.body.question_id,
-      },
-    })
-      .then((response) => {
-        res.status(204).send(response.data);
-      })
-      .catch((err) => {
-        console.error('PROBLEM REPORTING QUESTION:  ', err);
-      });
+  reportQuestion: async (req, res) => {
+    try {
+      const questionId = req.body.question_id;
+      await models.questions.reportQuestion(questionId);
+
+      res.sendStatus(204);
+    } catch (error) {
+      console.log('Error reporting question: ', error);
+      res.sendStatus(500);
+    }
   },
-  // Can optimize the two functions below, by combining them and swapping the final endpoint with a passable tag
-  // So it can just read the require task and run from there
 
   upvoteAnswer: (req, res) => {
     axios.put(`https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/qa/answers/${req.body.answer_id}/helpful`, req.body, {

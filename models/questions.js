@@ -40,17 +40,19 @@ module.exports = {
       throw error;
     }
   },
-  async reportQuestion() {
+  async reportQuestion(questionId) {
     try {
-
+      const queryString = `UPDATE questions SET reported = true WHERE id = ${questionId};`;
+      await pool.query(queryString);
     } catch (error) {
       console.log('Error reporting question in database: ', error);
       throw error;
     }
   },
-  async updateQuestionHelpfulness() {
+  async updateQuestionHelpfulness(questionId) {
     try {
-
+      const queryString = `UPDATE questions SET helpful = helpful + 1 WHERE id = ${questionId};`;
+      await pool.query(queryString);
     } catch (error) {
       console.log('Error updating question in database: ', error);
       throw error;
