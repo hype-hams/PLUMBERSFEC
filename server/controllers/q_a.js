@@ -11,12 +11,10 @@ module.exports = {
   getQuestions: async (req, res) => {
     try {
       const results = await models.questions.getQuestions(req.query.product_id);
-      console.log(results);
       const convertedResults = results.map((question) => {
         const milliseconds = parseInt(question.date_written, 10);
         const date = new Date(milliseconds);
         date.setHours(0, 0, 0, 0);
-        console.log(date);
         const newDate = date.toISOString();
 
         const convertedQuestion = {
@@ -24,6 +22,7 @@ module.exports = {
           question_body: question.body,
           question_date: newDate,
           asker_name: question.asker_name,
+          asker_email: question.asker_email,
           question_helpfulness: question.helpful,
           reported: question.reported,
           answers: {},
@@ -33,6 +32,7 @@ module.exports = {
       res.status(200).send(convertedResults);
     } catch (error) {
       console.log('Error connecting to server ', error);
+      res.sendStatus(500);
     }
   },
 
@@ -54,21 +54,39 @@ module.exports = {
       });
   },
 
-  postQuestion: (req, res) => {
+  postQuestion: async (req, res) => {
     // Will post a new question to the db
     // req will vary based off how modal looks
-    axios.post(serverAPI, req.body, {
-      headers: headAuth,
-      params: {
-        product_id: req.product_id,
-      },
-    })
-      .then((response) => {
-        res.status(201).send(response.data);
-      })
-      .catch((err) => {
-        console.error('PROBLEM WITH POSTING QUESTION: ', err);
-      });
+    try {
+      const currentDate = new Date();
+      const convertedDate = currentDate.getTime();
+      const { product_id, ...rest } = req.body;
+      const updateInfo = {
+        ...rest,
+        productId: product_id,
+        helpfulness: 0,
+        reported: false,
+        questionDate: convertedDate,
+      };
+      await models.questions.postQuestion(updateInfo);
+      res.sendStatus(201);
+    } catch (error) {
+      console.log('Error sending data to server: ', error);
+      res.sendStatus(500);
+    }
+
+    // axios.post(serverAPI, req.body, {
+    //   headers: headAuth,
+    //   params: {
+    //     product_id: req.product_id,
+    //   },
+    // })
+    //   .then((response) => {
+    //     res.status(201).send(response.data);
+    //   })
+    //   .catch((err) => {
+    //     console.error('PROBLEM WITH POSTING QUESTION: ', err);
+    //   });
   },
 
   postAnswer: (req, res) => {
