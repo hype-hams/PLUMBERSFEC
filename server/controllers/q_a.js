@@ -1,5 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
+const models = require('../../models');
 
 // test id 40344
 const headAuth = { Authorization: process.env.API_KEY };
@@ -7,27 +8,32 @@ const serverAPI = 'https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/qa/questi
 
 module.exports = {
 
-  getQuestions: (req, res) => {
-    // Will get all Questions in the database
-    // *** THIS WILL EITHER INCLUDE THE ANSWERS OR INCLUDE AN ID FOR THE ANSWERS ***
-    const options = {
-      method: 'get',
-      url: `${serverAPI}`,
-      headers: headAuth,
-      params: {
-        product_id: req.query.product_id,
-        page: 1,
-        count: 100,
-      },
-    };
-    return axios(options)
-      .then((response) => {
-        // console.log('AXIOS GET QUESTIONS SUCCESS:  ', response.data)
-        res.status(200).send(response.data);
-      })
-      .catch((err) => {
-        console.error('ERROR GETTING QUESTIONS:  ', err);
+  getQuestions: async (req, res) => {
+    try {
+      const results = await models.questions.getQuestions(req.query.product_id);
+      console.log(results);
+      const convertedResults = results.map((question) => {
+        const milliseconds = parseInt(question.date_written, 10);
+        const date = new Date(milliseconds);
+        date.setHours(0, 0, 0, 0);
+        console.log(date);
+        const newDate = date.toISOString();
+
+        const convertedQuestion = {
+          question_id: question.id,
+          question_body: question.body,
+          question_date: newDate,
+          asker_name: question.asker_name,
+          question_helpfulness: question.helpful,
+          reported: question.reported,
+          answers: {},
+        };
+        return convertedQuestion;
       });
+      res.status(200).send(convertedResults);
+    } catch (error) {
+      console.log('Error connecting to server ', error);
+    }
   },
 
   getAllAnswers: (req, res) => {
