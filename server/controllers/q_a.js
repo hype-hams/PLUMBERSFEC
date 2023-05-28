@@ -102,19 +102,6 @@ module.exports = {
       console.log('Error updating question helpfulness: ', error);
       res.sendStatus(500);
     }
-    // console.log('upvote body: ', req.body.question_id);
-    // axios.put(`${serverAPI}/${req.body.question_id}/helpful`, req.body, {
-    //   headers: headAuth,
-    //   params: {
-    //     question_id: req.body.question_id,
-    //   },
-    // })
-    //   .then((response) => {
-    //     res.status(204).send(response.data);
-    //   })
-    //   .catch((err) => {
-    //     console.error('PROBLEM UPVOTING QUESTION:  ', err);
-    //   });
   },
 
   reportQuestion: async (req, res) => {

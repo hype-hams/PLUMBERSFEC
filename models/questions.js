@@ -13,6 +13,7 @@ module.exports = {
       throw error;
     }
   },
+
   async postQuestion(question) {
     try {
       const {
@@ -40,6 +41,7 @@ module.exports = {
       throw error;
     }
   },
+
   async reportQuestion(questionId) {
     try {
       const queryString = `UPDATE questions SET reported = true WHERE id = ${questionId};`;
@@ -49,6 +51,7 @@ module.exports = {
       throw error;
     }
   },
+
   async updateQuestionHelpfulness(questionId) {
     try {
       const queryString = `UPDATE questions SET helpful = helpful + 1 WHERE id = ${questionId};`;
