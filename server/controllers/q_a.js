@@ -1,10 +1,5 @@
 require('dotenv').config();
-const axios = require('axios');
 const models = require('../../models');
-
-// test id 40344
-const headAuth = { Authorization: process.env.API_KEY };
-const serverAPI = 'https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/qa/questions';
 
 module.exports = {
 
@@ -36,37 +31,48 @@ module.exports = {
     }
   },
 
-  getAllAnswers: (req, res) => {
-    // I getQuestions returns an id, this will return the answers based off id
-    // Otherwise this is redundant
-    const params = req.query.question_id;
-    const options = {
-      method: 'get',
-      url: `${serverAPI}/${params}/answers`,
-      headers: headAuth,
-    };
-    return axios(options)
-      .then((response) => {
-        res.status(200).send(response.data);
-      })
-      .catch((err) => {
-        console.error('ERROR GETTING ANSWERS:  ', err);
+  getAllAnswers: async (req, res) => {
+    try {
+      const questionId = req.query.question_id;
+      const answers = await models.answers.getAnswers(questionId);
+      const convertedResults = answers.map((answer) => {
+        const milliseconds = parseInt(answer.date_written, 10);
+        const date = new Date(milliseconds);
+        date.setHours(0, 0, 0, 0);
+        const newDate = date.toISOString();
+
+        const convertedAnswer = {
+          answer_id: answer.id,
+          body: answer.body,
+          date: newDate,
+          answerer_name: answer.answerer_name,
+          helpfulness: answer.answerer_email,
+          photos: [],
+        };
+        return convertedAnswer;
       });
+
+      res.status(200).send(convertedResults);
+    } catch (error) {
+      console.log('Error getting questions from server: ', error);
+      res.sendStatus(500);
+    }
   },
 
   postQuestion: async (req, res) => {
     try {
       const currentDate = new Date();
       const convertedDate = currentDate.getTime();
-      const { product_id, ...rest } = req.body;
+      const { product_id, ...rest } = req.body; // eslint-disable-line camelcase
       const updateInfo = {
         ...rest,
-        productId: product_id,
+        productId: product_id, // eslint-disable-line camelcase
         helpfulness: 0,
         reported: false,
         questionDate: convertedDate,
       };
       await models.questions.postQuestion(updateInfo);
+
       res.sendStatus(201);
     } catch (error) {
       console.log('Error sending data to server: ', error);
@@ -74,22 +80,24 @@ module.exports = {
     }
   },
 
-  postAnswer: (req, res) => {
-    // Will post a new Answer to the question
-    // req will vary based off how modal looks
-    console.log('query: ', req.body);
-    axios.post(`${serverAPI}/${req.body.question_id}/answers`, req.body, {
-      headers: headAuth,
-      params: {
-        question_id: req.question_id,
-      },
-    })
-      .then((response) => {
-        res.status(201).send(response.data);
-      })
-      .catch((err) => {
-        console.error('PROBLEM WITH POSTING ANSWER: ', err);
-      });
+  postAnswer: async (req, res) => {
+    try {
+      const currentDate = new Date();
+      const convertedDate = currentDate.getTime();
+      const { question_id, ...rest } = req.body; // eslint-disable-line camelcase
+      const updatedInfo = {
+        ...rest,
+        questionId: question_id, // eslint-disable-line camelcase
+        answerDate: convertedDate,
+        reported: false,
+      };
+      await models.answers.postAnswer(updatedInfo);
+
+      res.sendStatus(201);
+    } catch (error) {
+      console.log('Error posting new answer to server: ', error);
+      res.sendStatus(500);
+    }
   },
 
   upvoteQuestion: async (req, res) => {
@@ -116,33 +124,27 @@ module.exports = {
     }
   },
 
-  upvoteAnswer: (req, res) => {
-    axios.put(`https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/qa/answers/${req.body.answer_id}/helpful`, req.body, {
-      headers: headAuth,
-      params: {
-        answer_id: req.body.answer_id,
-      },
-    })
-      .then((response) => {
-        res.status(204).send(response.data);
-      })
-      .catch((err) => {
-        console.error('PROBLEM UPVOTING QUESTION:  ', err);
-      });
+  upvoteAnswer: async (req, res) => {
+    try {
+      const answerId = req.body.answer_id;
+      await models.answers.updateAnswerHelpfulness(answerId);
+
+      res.sendStatus(204);
+    } catch (error) {
+      console.log('Error updating answer helpfulness: ', error);
+      res.sendStatus(500);
+    }
   },
 
-  reportAnswer: (req, res) => {
-    axios.put(`https://app-hrsei-api.herokuapp.com/api/fec2/hr-rfp/qa/answers/${req.body.answer_id}/report`, req.body, {
-      headers: headAuth,
-      params: {
-        answer_id: req.body.answer_id,
-      },
-    })
-      .then((response) => {
-        res.status(204).send(response.data);
-      })
-      .catch((err) => {
-        console.error('PROBLEM REPORTING ANSWER:  ', err);
-      });
+  reportAnswer: async (req, res) => {
+    try {
+      const answerId = req.body.answer_id;
+      await models.answers.reportAnswer(answerId);
+
+      res.sendStatus(204);
+    } catch (error) {
+      console.log('Error reporting answer to server: ', error);
+      res.sendStatus(500);
+    }
   },
 };

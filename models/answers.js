@@ -27,6 +27,7 @@ module.exports = {
       } = answer;
       const values = [questionId, body, answerDate, name, email, reported, helpfulness];
       const queryString = 'INSERT INTO answers (question_id, body, date_written, answerer_name, answerer_email, reported, helpful) VALUES ($1, $2, $3, $4, $5, $6, $7);';
+
       await pool.query(queryString, values);
     } catch (error) {
       console.log('Error posting new answer to database: ', error);
@@ -37,6 +38,7 @@ module.exports = {
   async updateAnswerHelpfulness(answerId) {
     try {
       const queryString = `UPDATE answers SET helpful = helpful + 1 WHERE id = ${answerId};`;
+
       await pool.query(queryString);
     } catch (error) {
       console.log('Error updating answer helpfulness: ', error);
@@ -47,6 +49,7 @@ module.exports = {
   async reportAnswer(answerId) {
     try {
       const queryString = `UPDATE answers SET reported = true WHERE id = ${answerId};`;
+
       await pool.query(queryString);
     } catch (error) {
       console.log('Error reporting answer: ', error);
