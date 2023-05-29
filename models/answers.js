@@ -3,7 +3,7 @@ const pool = require('../database');
 module.exports = {
   async getAnswers(questionId) {
     try {
-      const queryString = 'SELECT * FROM answers WHERE question_id = $1 AND reported = false ORDER BY helpful DESC LIMIT 15 OFFSET 0;';
+      const queryString = 'SELECT answers.*, photos.id AS photo_id, photos.url FROM answers LEFT JOIN photos ON answers.id = photos.answer_id WHERE question_id = $1 AND reported = false ORDER BY helpful DESC LIMIT 15 OFFSET 0;';
       const values = [questionId];
       const answers = await pool.query(queryString, values);
 

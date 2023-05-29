@@ -7,10 +7,34 @@ module.exports = {
     try {
       const results = await models.questions.getQuestions(req.query.product_id);
       const convertedResults = results.map((question) => {
+        console.log('The question date: ', question.date_written);
         const milliseconds = parseInt(question.date_written, 10);
         const date = new Date(milliseconds);
         date.setHours(0, 0, 0, 0);
         const newDate = date.toISOString();
+
+        let answers = {};
+
+        if (question.answer_id.length > 0) {
+          question.answer_id.forEach((id, i) => {
+            const answerMilliseconds = parseInt(question.date_written[i], 10);
+            const answerDate = new Date(answerMilliseconds);
+            answerDate.setHours(0, 0, 0, 0);
+            const newAnswerDate = answerDate.toISOString();
+
+            answers = {
+              ...answers,
+              [id]: {
+                id: question.answer_id[i],
+                body: question.answer_body[i],
+                date: newAnswerDate,
+                answerer_name: question.answerer_name[i],
+                helpfulness: question.answer_helpful[i],
+                photos: [],
+              },
+            };
+          });
+        }
 
         const convertedQuestion = {
           question_id: question.id,
@@ -20,7 +44,7 @@ module.exports = {
           asker_email: question.asker_email,
           question_helpfulness: question.helpful,
           reported: question.reported,
-          answers: {},
+          answers,
         };
         return convertedQuestion;
       });
@@ -41,13 +65,21 @@ module.exports = {
         date.setHours(0, 0, 0, 0);
         const newDate = date.toISOString();
 
+        let photos = [];
+
+        if (answer.photo_id.length > 0) {
+          answer.photo_id.forEach((photoId, i) => {
+            photos = [...photos, { id: photoId, url: answer.url[i] }];
+          });
+        }
+
         const convertedAnswer = {
           answer_id: answer.id,
           body: answer.body,
           date: newDate,
           answerer_name: answer.answerer_name,
           helpfulness: answer.answerer_email,
-          photos: [],
+          photos,
         };
         return convertedAnswer;
       });
