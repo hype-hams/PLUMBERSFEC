@@ -3,10 +3,34 @@ const pool = require('../database');
 module.exports = {
   async getAnswers(questionId) {
     try {
-      const queryString = 'SELECT answers.*, photos.id AS photo_id, photos.url FROM answers LEFT JOIN photos ON answers.id = photos.answer_id WHERE question_id = $1 AND reported = false ORDER BY helpful DESC LIMIT 15 OFFSET 0;';
+      const queryString = `
+      SELECT
+        answers.id AS answer_id,
+        answers.body AS answer_body,
+        answers.date_written AS answer_date,
+        answers.answerer_name,
+        answers.helpful,
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'photo_id', photos.id,
+            'photo_url', photos.url
+          )
+        ) AS photos
+      FROM
+        answers
+      LEFT JOIN photos ON answers.id = photos.answer_id
+      WHERE
+        answers.question_id = $1
+        AND answers.reported = false
+      GROUP BY
+        answers.id
+      ORDER BY
+        answers.helpful DESC
+      LIMIT 15 OFFSET 0;
+      `;
       const values = [questionId];
-      const answers = await pool.query(queryString, values);
 
+      const answers = await pool.query(queryString, values);
       return answers.rows;
     } catch (error) {
       console.log('Error getting answers from database: ', error);

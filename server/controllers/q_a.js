@@ -7,29 +7,28 @@ module.exports = {
     try {
       const results = await models.questions.getQuestions(req.query.product_id);
       const convertedResults = results.map((question) => {
-        console.log('The question date: ', question.date_written);
-        const milliseconds = parseInt(question.date_written, 10);
+        const milliseconds = parseInt(question.question_date, 10);
         const date = new Date(milliseconds);
         date.setHours(0, 0, 0, 0);
         const newDate = date.toISOString();
 
         let answers = {};
 
-        if (question.answer_id.length > 0) {
-          question.answer_id.forEach((id, i) => {
-            const answerMilliseconds = parseInt(question.date_written[i], 10);
+        if (question.answers[0].answer_id !== null) {
+          question.answers.forEach((answer) => {
+            const answerMilliseconds = parseInt(answer.answer_date, 10);
             const answerDate = new Date(answerMilliseconds);
             answerDate.setHours(0, 0, 0, 0);
             const newAnswerDate = answerDate.toISOString();
 
             answers = {
               ...answers,
-              [id]: {
-                id: question.answer_id[i],
-                body: question.answer_body[i],
+              [answer.answer_id]: {
+                id: answer.answer_id,
+                body: answer.answer_body,
                 date: newAnswerDate,
-                answerer_name: question.answerer_name[i],
-                helpfulness: question.answer_helpful[i],
+                answerer_name: answer.answerer_name,
+                helpfulness: answer.answer_helpful,
                 photos: [],
               },
             };
@@ -37,8 +36,8 @@ module.exports = {
         }
 
         const convertedQuestion = {
-          question_id: question.id,
-          question_body: question.body,
+          question_id: question.question_id,
+          question_body: question.question_body,
           question_date: newDate,
           asker_name: question.asker_name,
           asker_email: question.asker_email,
@@ -60,25 +59,25 @@ module.exports = {
       const questionId = req.query.question_id;
       const answers = await models.answers.getAnswers(questionId);
       const convertedResults = answers.map((answer) => {
-        const milliseconds = parseInt(answer.date_written, 10);
+        const milliseconds = parseInt(answer.answer_date, 10);
         const date = new Date(milliseconds);
         date.setHours(0, 0, 0, 0);
         const newDate = date.toISOString();
 
         let photos = [];
 
-        if (answer.photo_id.length > 0) {
-          answer.photo_id.forEach((photoId, i) => {
-            photos = [...photos, { id: photoId, url: answer.url[i] }];
+        if (answer.photos[0].photo_id !== null) {
+          answer.photos.forEach((photo) => {
+            photos = [...photos, { id: photo.photo_id, url: photo.photo_url }];
           });
         }
 
         const convertedAnswer = {
-          answer_id: answer.id,
-          body: answer.body,
+          answer_id: answer.answer_id,
+          body: answer.answer_body,
           date: newDate,
           answerer_name: answer.answerer_name,
-          helpfulness: answer.answerer_email,
+          helpfulness: answer.helpful,
           photos,
         };
         return convertedAnswer;
@@ -121,6 +120,7 @@ module.exports = {
         ...rest,
         questionId: question_id, // eslint-disable-line camelcase
         answerDate: convertedDate,
+        helpfulness: 0,
         reported: false,
       };
       await models.answers.postAnswer(updatedInfo);
