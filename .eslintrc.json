@@ -15,6 +15,14 @@
     "plugins": [
         "react"
     ],
+    "settings": {
+        "import/resolver": {
+          "node": {
+            "extensions": [".js"],
+            "moduleDirectory": ["node_modules", "/opt/homebrew/bin"]
+          }
+        }
+      },
     "rules": {
         "no-console": "off",
         "import/extensions": "off"

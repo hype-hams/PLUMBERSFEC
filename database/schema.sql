@@ -40,3 +40,9 @@ FROM '/gabrieljimenez/downloads/answers.csv' DELIMITER ',' CSV HEADER;
 
 COPY photos (answer_id, url)
 FROM '/gabrieljimenez/downloads/answers_photos.csv' DELIMITER ',' CSV HEADER;
+
+--SELECT pg_get_serial_sequence('questions', 'id'); Command to get sequence name
+
+SELECT SETVAL('public.questions_id_seq', (SELECT MAX(id) FROM questions));
+SELECT SETVAL('public.answers_id_seq', (SELECT MAX(id) FROM answers));
+

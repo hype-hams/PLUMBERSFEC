@@ -1,8 +1,9 @@
 const pool = require('../database');
 
 module.exports = {
-  async getQuestions(productId) {
+  async getQuestions(productId, page, count) {
     try {
+      const offset = (page - 1) * count;
       const queryString = `
       SELECT
         questions.id AS question_id,
@@ -10,11 +11,10 @@ module.exports = {
         questions.body AS question_body,
         questions.date_written AS question_date,
         questions.asker_name,
-        questions.asker_email,
         questions.reported,
         questions.helpful,
-        JSON_AGG(
-          JSON_BUILD_OBJECT(
+        JSONB_AGG(
+          JSONB_BUILD_OBJECT(
             'answer_id', answers.id,
             'answer_body', answers.body,
             'answer_date', answers.date_written,
@@ -32,9 +32,9 @@ module.exports = {
         questions.id
       ORDER BY
         questions.helpful DESC
-      LIMIT 100 OFFSET 0;
+      LIMIT $2 OFFSET $3;
       `;
-      const values = [productId];
+      const values = [productId, count, offset];
 
       const results = await pool.query(queryString, values);
       return results.rows;

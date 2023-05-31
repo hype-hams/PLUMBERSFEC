@@ -6,6 +6,8 @@ const pool = new Pool({
   database: 'questionsandanswers',
   password: 'familia4eve',
   port: 5432,
+  IdleTimeoutMillis: 2000,
+  connectionTimeoutMillis: 5000,
 });
 
 module.exports = pool;
