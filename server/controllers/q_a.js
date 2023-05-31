@@ -5,7 +5,8 @@ module.exports = {
 
   getQuestions: async (req, res) => {
     try {
-      const results = await models.questions.getQuestions(req.query.product_id);
+      const { page, count } = req.query;
+      const results = await models.questions.getQuestions(req.query.product_id, page, count);
       const convertedResults = results.map((question) => {
         const milliseconds = parseInt(question.question_date, 10);
         const date = new Date(milliseconds);
@@ -40,7 +41,6 @@ module.exports = {
           question_body: question.question_body,
           question_date: newDate,
           asker_name: question.asker_name,
-          asker_email: question.asker_email,
           question_helpfulness: question.helpful,
           reported: question.reported,
           answers,
@@ -57,7 +57,8 @@ module.exports = {
   getAllAnswers: async (req, res) => {
     try {
       const questionId = req.query.question_id;
-      const answers = await models.answers.getAnswers(questionId);
+      const { page, count } = req.query;
+      const answers = await models.answers.getAnswers(questionId, page, count);
       const convertedResults = answers.map((answer) => {
         const milliseconds = parseInt(answer.answer_date, 10);
         const date = new Date(milliseconds);
